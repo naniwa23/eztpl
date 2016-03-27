@@ -6,13 +6,15 @@
  */
 var eztpl = function eztpl(tpl, options)
 {
+	"strict"
 	var tpl_obj = {},
 		s = (function mergeObject(opts) {
 			var defaults = {
 					remove_whitespaces: true,
 					placeholder: ['::', '::'],
 					placeholder_block: ['::=placeholder_name>::', '::<placeholder_name=::'],
-					block: ['::>blockname>::', '::<blockname<::']
+					block: ['::>blockname>::', '::<blockname<::'],
+					specials: ['__', '__']
 				},
 				key_name;
 
@@ -68,6 +70,16 @@ var eztpl = function eztpl(tpl, options)
 	}
 
 	/**
+	 * create a regular expression for special variables
+	 * @param {string} special_name
+	 * @returns {RegExp}
+	 */
+	function getSpecialRegex(special_name)
+	{
+		return new RegExp(s.specials[0] + special_name + s.specials[1], 'gm');
+	}
+
+	/**
 	 * sets the delimiter for placeholder
 	 * @param {string} start_delimiter
 	 * @param {string} end_delimiter
@@ -113,7 +125,9 @@ var eztpl = function eztpl(tpl, options)
 			block_html,
 			block_obj,
 			i,
-			name;
+			l,
+			name,
+			has_specials;
 
 		// multi replace
 		if(search instanceof Object) {
@@ -136,16 +150,23 @@ var eztpl = function eztpl(tpl, options)
 					block_html = '';
 
 					if(block_tpl) {
-						for(i in replace)
-						{
-							if(replace.hasOwnProperty(i)) {
-								block_obj = new eztpl(block_tpl, options);
-								block_obj.replace(replace[i]);
-								block_html += block_obj.getTpl();
-							}
+						has_specials = getSpecialRegex('(index|rindex|even|odd)').test(block_tpl);
 
+						for (i = 0, l = replace.length; i < l; i++)
+						{
+							block_obj = new eztpl(block_tpl, options);
+							block_obj.replace(replace[i]);
+							block_html += block_obj.getTpl();
+
+							if(has_specials) {
+								block_html = block_html.replace(getSpecialRegex('index'), i + 1);
+								block_html = block_html.replace(getSpecialRegex('rindex'), l - i);
+								block_html = block_html.replace(getSpecialRegex('even'), (i % 2) ? 0 : 1);
+								block_html = block_html.replace(getSpecialRegex('odd'), i % 2);
+							}
 						}
 						tpl = tpl.replace(block_regex, block_html);
+						tpl = tpl.replace(getSpecialRegex(search + '_count'), l);
 					}
 					block_regex = getBlockRegex(search);
 					tpl = tpl.replace(block_regex, '$1');
@@ -188,7 +209,7 @@ var eztpl = function eztpl(tpl, options)
 	 */
 	tpl_obj.delPlaceholder = function eztplDelPlaceholder(placeholder_name)
 	{
-		if('string' == typeof placeholder_name) {
+		if('string' === typeof placeholder_name) {
 			tpl = tpl.replace(getSearchRegex(placeholder_name), '');
 		}
 		else {
@@ -197,12 +218,26 @@ var eztpl = function eztpl(tpl, options)
 	};
 
 	/**
+	 * removes all placeholder blocks or a specific one when placeholder_block_name is given
+	 * @param {string} [placeholder_block_name]
+	 */
+	tpl_obj.delPlaceholderBlock = function eztplDelPlaceholderBlock(placeholder_block_name)
+	{
+		if('string' === typeof placeholder_block_name) {
+			tpl = tpl.replace(getPlaceholderBlockRegex(placeholder_block_name), '');
+		}
+		else {
+			tpl = tpl.replace(getPlaceholderBlockRegex('.*?'), '');
+		}
+	}
+
+	/**
 	 * removes all blocks currently present in template or a specific on, when block_name is given
 	 * @param {string} [block_name]
 	 */
 	tpl_obj.delBlock = function eztplDelBlock(block_name)
 	{
-		if('string' == typeof block_name) {
+		if('string' === typeof block_name) {
 			tpl = tpl.replace(getBlockRegex(block_name), '');
 		}
 		else {
@@ -211,14 +246,25 @@ var eztpl = function eztpl(tpl, options)
 	};
 
 	/**
-	 * returns the current state of the template
-	 * @returns {*}
+	 * removes all unreplaced placeholders and blocks
+	 */
+	tpl_obj.clear = function eztplClear()
+	{
+		// remove blocks first to save performance
+		tpl_obj.delBlock();
+		tpl_obj.delPlaceholderBlock();
+		tpl_obj.delPlaceholder();
+	};
+
+	/**
+	 * returns the current state of the template or a block if block_name is given
+	 * @returns {string}
 	 */
 	tpl_obj.getTpl = function eztplGetTpl(block_name)
 	{
 		var block_regex,
 			block_tpl;
-		
+
 		if(block_name) {
 			block_regex = getBlockRegex(block_name);
 			block_tpl = tpl.match(block_regex)[0];

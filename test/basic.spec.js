@@ -50,6 +50,18 @@ describe('basic template functions', function testBasicTemplateFunctions() {
 
 
 
+
+
+	it('replace a simple block with placeholder inside that uses special variables too', function() {
+		var tpl = new eztpl('I like __like_block_count__ things:::>like_block>:: __index__ ::like:: (__rindex__, __even__, __odd__)::<like_block<::.');
+
+		tpl.replace('like_block', [{like: 'pizza'}, {like: 'sunny weather'}, {like: 'chocolate'}]);
+
+		expect(tpl.getTpl()).toBe('I like 3 things: 1 pizza (3, 1, 0) 2 sunny weather (2, 0, 1) 3 chocolate (1, 1, 0).');
+	});
+
+
+
 	it('remove a placeholder', function() {
 		var tpl = new eztpl('Hello ::title:: ::name::!');
 
@@ -67,6 +79,25 @@ describe('basic template functions', function testBasicTemplateFunctions() {
 		tpl.delPlaceholder();
 
 		expect(tpl.getTpl()).toBe('Hello  !');
+	});
+
+
+	it('remove a placeholder block', function() {
+		var tpl = new eztpl('::=name>::Hello ::name::!::<name=::');
+
+		tpl.delPlaceholderBlock('name');
+
+		expect(tpl.getTpl()).toBe('');
+	});
+
+
+
+	it('remove all placeholders', function() {
+		var tpl = new eztpl('::=name>::Hello ::name::!::<name=::');
+
+		tpl.delPlaceholderBlock();
+
+		expect(tpl.getTpl()).toBe('');
 	});
 
 
@@ -90,6 +121,16 @@ describe('basic template functions', function testBasicTemplateFunctions() {
 
 		expect(tpl.getTpl()).toBe('You have 123 messages!');
 	});
+
+
+	it('clear all placeholder', function() {
+		var tpl = new eztpl('You have ::cnt:: ::>new_block>::new ::<new_block<::messages!');
+
+		tpl.clear();
+
+		expect(tpl.getTpl()).toBe('You have  messages!');
+	});
+
 
 	it('get block content', function() {
 		var tpl = new eztpl('You have ::cnt:: ::>new_block>::new ::<new_block<::messages!');

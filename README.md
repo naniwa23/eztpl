@@ -11,7 +11,7 @@ npm install eztpl
 After that you can easily use it:
 ```javascript
 var eztpl = require('eztpl');
- 
+
 var tpl_class = new eztpl('My ::template::');
 ```
 
@@ -24,7 +24,7 @@ var tpl = new eztpl(template_string, options);
 ```
 ### default template placeholder
 
-eztpl has three different kinds of placeholders.
+eztpl has three different kinds of placeholders (can be set via options object).
 
 1. string placeholder
 
@@ -54,6 +54,38 @@ eztpl has three different kinds of placeholders.
    In other words, you are able to replace other template placeholder in this block directly (even other repeating blocks).
 
 
+#### options
+
+ * _remove\_whitespaces (_boolean, default: true)_
+
+   removes all line breaks and tabs after template is loaded.
+
+ * _placeholder_ (_array_, default: ['::', '::'])
+
+   simple string placeholder delimiter
+
+ * _placeholder\_block_ (_array_, default: ['::=placeholder_name>::', '::<placeholder_name=::'])
+
+   placeholder block delimiter. The string "placeholder_name" will be replaced with the current placeholder name
+
+ * _block_ (_array_, default: ['::>blockname>::', '::<blockname<::'])
+
+   repeating block delimiter. The sting "blockname" will be replaced with the current repeating block name.
+
+ * _specials_ (_array_, default: ['\_\_', '\_\_'])
+
+   sets special variables start and end delimiter. Special variables are dynamically changing variables for repeating blocks, like
+   * "index" (index number of current entry)
+   * "rindex" (reverse index number of current entry)
+   * "even"	(will be 1 or 0, 1 for an even entry number and 0 for odd)
+   * "odd" (same as even, but inverted)
+   * "count" (entry count for a repeating block)
+
+     **Caution**: this is a variable that will be prefixed with the current block name, eg.:
+
+     blockname = "my_block" --> eztpl will look for "\_\_my\_block_count\_\_" and not just "\_\_count\_\_"
+
+
 ### Methods
 
 #### replace(search[, replace])
@@ -69,13 +101,13 @@ The order of replaces is irrelevant, but if you need to replace for example "id"
 // instantiate eztpl with a template string
 var tpl = new eztpl('My ::template:: ::string::'),
  result;
- 
+
 // replace placeholder 'template' with 'first'
 tpl.replace('template', 'first');
- 
+
 // replace placeholder 'string' with 'test'
 tpl.replace('string', 'test');
- 
+
 // "My first test"
 result = tpl.getTpl();
 ```
@@ -86,13 +118,13 @@ You can get the same results when you pass an _object_ as first arguments.
 // instantiate eztpl with a template string
 var tpl = new eztpl('My ::template:: ::string::'),
   result;
- 
+
 // replace placeholder 'template' and 'string" in template
 tpl.replace({
   'template': 'first',
   'string': 'test'
 });
- 
+
 // "My first test"
 result = tpl.getTpl();
 ```
@@ -103,39 +135,39 @@ result = tpl.getTpl();
 // instantiate eztpl with a template string
 var tpl = new eztpl('Dear ::name::::=middlename>::::middlename::::<middlename=::::surname::'),
  result;
-  
+
 // replace string placeholder 'name' with 'John'
 tpl.replace('name', 'John');
- 
+
 // replace string placeholder 'surname' with 'Miller'
 tpl.replace('surname', 'Miller');
- 
+
 // replace placeholder block 'middlename' with 'Maria '
 tpl.replace('middlename', 'Maria ');
- 
+
 // "Dear John Maria Miller"
 result = tpl.getTpl();
- 
- 
- 
- 
+
+
+
+
 // or with this placeholder block removed
- 
- 
- 
+
+
+
 // instantiate eztpl with a template string
 var tpl = new eztpl('Dear ::name::::=middlename>::::middlename::::<middlename=::::surname::'),
  result;
- 
+
 // replace string placeholder 'name' with 'John'
 tpl.replace('name', 'John');
- 
+
 // replace string placeholder 'surname' with 'Miller'
 tpl.replace('surname', 'Miller');
- 
+
 // removes complete placeholder block 'middlename', because value is empty
 tpl.replace('middlename', '');
- 
+
 // "Dear John Miller"
 result = tpl.getTpl();
 ```
@@ -147,7 +179,7 @@ result = tpl.getTpl();
 // instantiate eztpl with a template string
 var tpl = new eztpl("Wishing list:\n\n::>wish>::* ::count:: ::wish_name::::<wish<::\n"),
   result;
- 
+
 // replace placeholder 'template' and 'string" in template
 tpl.replace('wish',[
    {
@@ -163,7 +195,7 @@ tpl.replace('wish',[
       'wish_name': 'donuts'
    }
 ]);
- 
+
 // "Wishing list:
 //
 // * 1 car
@@ -179,7 +211,7 @@ result = tpl.getTpl();
 // instantiate eztpl with a template string
 var tpl = new eztpl("Wishing list for ::name::::=middlename>::::middlename::::<middlename=::::surname:::\n\n::>wish>::* ::count:: ::wish_name::::<wish<::\n"),
   result;
- 
+
 // replace placeholder 'template' and 'string" in template
 tpl.replace({
   'wish': [
@@ -200,7 +232,7 @@ tpl.replace({
    'middlename': '',
    'surname':    'Miller'
 });
- 
+
 // "Wishing list for John Miller:
 //
 // * 1 car
@@ -214,10 +246,10 @@ It is also possible to nest blocks;
 ```html
 <script id="my_contacts" type="text/template">
    <h1>My contacts</h1>
-   
+
    ::>contacts>::<div>
    <h2>::name::</h2>
-   
+
    Phone numbers:
    <ul>
       ::>phone_numbers>::<li>::phone_number::</li>::<phone_numbers<::
@@ -225,11 +257,12 @@ It is also possible to nest blocks;
    </div>::<contacts<::
 </script>
 ```
+
 ```javascript
 var tmpl_string = document.getElementById('my_contacts').innerHTML,
     tpl = new eztpl(tmpl_string),
     result;
- 
+
 tpl.replace({
   'contacts': [
       {
@@ -253,7 +286,7 @@ tpl.replace({
        }
    ]
 });
- 
+
 result = tpl.getTpl();
 ```
 
@@ -264,7 +297,7 @@ _result_ will be:
 
 <div>
    <h2>Barrack Obama</h2>
-   
+
    Phone numbers:
    <ul>
       <li>02-345-6789</li>
@@ -272,7 +305,7 @@ _result_ will be:
 </div>
 <div>
    <h2>John Doe</h2>
-   
+
    Phone numbers:
    <ul>
       <li>09-876-5432</li>
@@ -284,24 +317,45 @@ _result_ will be:
 
 ### delPlaceholder([placeholder_name])
 
-removes a string placeholder or placeholder block. If no argument is passed it will remove all string and block placeholder.
+removes a string placeholder. If no argument is passed it will remove all string placeholder.
 
 ```javascript
 // instantiate eztpl with a template string
-var tpl = new eztpl('My ::template:: ::string::'),
+var tpl = new eztpl('My ::=template>::::template:: ::<template=::::string::'),
   result;
- 
+
 // removes placeholder 'template'
-tpl.delPlaceholder('template');
- 
+tpl.delPlaceholderBlock('template');
+
 // replace placeholder 'template' and 'string" in template
 tpl.replace({
   'template': 'first',
   'string': 'test'
 });
- 
- 
- 
+
+// "My test"
+result = tpl.getTpl();
+```
+
+
+### delPlaceholderBlock([placeholder_block_name])
+
+removes a placeholder block. If no argument is passed it will remove all placeholder blocks.
+
+```javascript
+// instantiate eztpl with a template string
+var tpl = new eztpl('My ::template:: ::string::'),
+  result;
+
+// removes placeholder 'template'
+tpl.delPlaceholder('template');
+
+// replace placeholder 'template' and 'string" in template
+tpl.replace({
+  'template': 'first',
+  'string': 'test'
+});
+
 // "My  test"
 result = tpl.getTpl();
 ```
@@ -315,10 +369,10 @@ removes a repeating block. If no argument is passed it will remove all repeating
 // instantiate eztpl with a template string
 var tpl = new eztpl("Wishing list for ::name::::=middlename>::::middlename::::<middlename=::::surname:::\n\n::>wish>::* ::count:: ::wish_name::::<wish<::\n"),
   result;
- 
+
 // removes block 'wish' completely
 tpl.delBlock('wish');
- 
+
 tpl.replace({
   'wish': [
       {
@@ -338,11 +392,27 @@ tpl.replace({
    'middlename': '',
    'surname':    'Miller'
 });
- 
+
 // "Wishing list for John Miller:"
 result = tpl.getTpl();
 ```
 
+
+### clear()
+
+removes all template placeholders and blocks.
+
+```javascript
+// instantiate eztpl with a template string
+var tpl = new eztpl("Wishing list for ::name::::=middlename>::::middlename::::<middlename=::::surname:::\n\n::>wish>::* ::count:: ::wish_name::::<wish<::\n"),
+  result;
+
+// remove all placeholder and blocks
+tpl.clear();
+
+// "Wishing list for :"
+result = tpl.getTpl();
+```
 
 
 ### getTpl([block_name])
