@@ -79,7 +79,12 @@ var eztpl = function eztpl(tpl, options)
 		return new RegExp(s.specials[0] + special_name + s.specials[1], 'gm');
 	}
 
-	/**
+	tpl_obj.getSearchRegex = getSearchRegex;
+	tpl_obj.getPlaceholderBlockRegex = getPlaceholderBlockRegex;
+	tpl_obj.getBlockRegex = getBlockRegex;
+	tpl_obj.getSpecialRegex = getSpecialRegex;
+
+		/**
 	 * sets the delimiter for placeholder
 	 * @param {string} start_delimiter
 	 * @param {string} end_delimiter
@@ -229,7 +234,7 @@ var eztpl = function eztpl(tpl, options)
 		else {
 			tpl = tpl.replace(getPlaceholderBlockRegex('.*?'), '');
 		}
-	}
+	};
 
 	/**
 	 * removes all blocks currently present in template or a specific on, when block_name is given
